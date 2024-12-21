@@ -5,11 +5,13 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist',
+    rollupOptions: {
+      external: ['@tensorflow/tfjs'],
+    },
     sourcemap: true,
+    outDir: 'dist'
   },
   server: {
-    port: 5176,
-    host: true
+    port: 3000
   }
 });
