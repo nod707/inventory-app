@@ -46,14 +46,20 @@ const ProductForm = ({ onSubmit, initialData }) => {
       try {
         setProcessing(true);
         setError('');
+        console.log('Processing image:', file.name);
         const dimensions = await detectDimensions(file);
+        console.log('Dimensions detected:', dimensions);
         setFormData({
           ...formData,
           dimensions,
         });
       } catch (error) {
         console.error('Error detecting dimensions:', error);
-        setError('Failed to detect dimensions. Please enter them manually.');
+        setError(`Failed to detect dimensions: ${error.message}. Please enter them manually.`);
+        setFormData({
+          ...formData,
+          dimensions: [0, 0, 0],
+        });
       } finally {
         setProcessing(false);
       }
@@ -63,15 +69,20 @@ const ProductForm = ({ onSubmit, initialData }) => {
   const detectDimensions = async (imageFile) => {
     return new Promise(async (resolve, reject) => {
       try {
+        console.log('Starting dimension detection...');
         // Create image element
         const img = new Image();
         const imageUrl = URL.createObjectURL(imageFile);
+        console.log('Created image URL:', imageUrl);
         
         img.onload = async () => {
           try {
+            console.log('Image loaded, dimensions:', img.width, 'x', img.height);
             // Load TensorFlow.js
-            const tf = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js');
+            console.log('Loading TensorFlow...');
+            const tf = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js');
             await tf.ready();
+            console.log('TensorFlow loaded and ready');
             
             // Create canvas for image processing
             const canvas = document.createElement('canvas');
@@ -79,21 +90,29 @@ const ProductForm = ({ onSubmit, initialData }) => {
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0);
+            console.log('Image drawn to canvas');
             
             // Convert image to tensor
+            console.log('Converting to tensor...');
             const imageTensor = tf.browser.fromPixels(canvas)
               .expandDims(0)
               .toFloat()
               .div(255.0);
+            console.log('Created image tensor:', imageTensor.shape);
             
             // Load COCO-SSD model
-            const model = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/coco-ssd/1/default/1');
+            console.log('Loading COCO-SSD model...');
+            const model = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/ssd_mobilenet_v2/1/default/1/model.json');
+            console.log('Model loaded');
             
             // Get predictions
+            console.log('Getting predictions...');
             const predictions = await model.predict(imageTensor);
             const boxes = await predictions.array();
+            console.log('Predictions:', boxes);
             
             if (boxes && boxes[0] && boxes[0].length > 0) {
+              console.log('Object detected');
               // Get the first detected object
               const box = boxes[0][0];
               const [y1, x1, y2, x2] = box.slice(0, 4);
@@ -101,12 +120,15 @@ const ProductForm = ({ onSubmit, initialData }) => {
               // Calculate pixel dimensions
               const pixelWidth = Math.abs(x2 - x1) * img.width;
               const pixelHeight = Math.abs(y2 - y1) * img.height;
+              console.log('Pixel dimensions:', pixelWidth, 'x', pixelHeight);
               
               // Convert to inches (assuming 96 DPI)
               const PIXELS_PER_INCH = 96;
               const width = Math.round((pixelWidth / PIXELS_PER_INCH) * 10) / 10;
               const height = Math.round((pixelHeight / PIXELS_PER_INCH) * 10) / 10;
               const depth = Math.round((Math.min(width, height) * 0.4) * 10) / 10; // Estimate depth
+              
+              console.log('Final dimensions (inches):', [width, height, depth]);
               
               // Cleanup
               imageTensor.dispose();
@@ -115,20 +137,24 @@ const ProductForm = ({ onSubmit, initialData }) => {
               
               resolve([width, height, depth]);
             } else {
+              console.log('No objects detected');
               reject(new Error('No objects detected in image'));
             }
           } catch (error) {
+            console.error('Error in image processing:', error);
             reject(error);
           }
         };
         
-        img.onerror = () => {
+        img.onerror = (error) => {
+          console.error('Error loading image:', error);
           URL.revokeObjectURL(imageUrl);
           reject(new Error('Failed to load image'));
         };
         
         img.src = imageUrl;
       } catch (error) {
+        console.error('Error in dimension detection:', error);
         reject(error);
       }
     });
