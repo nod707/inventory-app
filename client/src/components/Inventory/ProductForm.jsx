@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -9,9 +9,11 @@ import {
   Chip,
   IconButton,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { products } from '../../services/api';
+import { GarmentMeasurement } from '../../services/garmentMeasurement';
 
 const ProductForm = ({ onSubmit, initialData }) => {
   const [formData, setFormData] = useState(initialData || {
@@ -29,8 +31,15 @@ const ProductForm = ({ onSubmit, initialData }) => {
   const [hashtag, setHashtag] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [debugImage, setDebugImage] = useState(null);
   const imageRef = useRef(null);
   const canvasRef = useRef(null);
+  const measurementService = useRef(new GarmentMeasurement());
+
+  useEffect(() => {
+    // Initialize measurement service
+    measurementService.current.initialize();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -47,12 +56,30 @@ const ProductForm = ({ onSubmit, initialData }) => {
         setProcessing(true);
         setError('');
         console.log('Processing image:', file.name);
-        const dimensions = await detectDimensions(file);
+        
+        // Measure garment
+        const dimensions = await measurementService.current.measureGarment(file);
         console.log('Dimensions detected:', dimensions);
+        
         setFormData({
           ...formData,
           dimensions,
         });
+
+        // Create debug view
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          setDebugImage(canvas.toDataURL());
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+
       } catch (error) {
         console.error('Error detecting dimensions:', error);
         setError(`Failed to detect dimensions: ${error.message}. Please enter them manually.`);
@@ -64,100 +91,6 @@ const ProductForm = ({ onSubmit, initialData }) => {
         setProcessing(false);
       }
     }
-  };
-
-  const detectDimensions = async (imageFile) => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        console.log('Starting dimension detection...');
-        // Create image element
-        const img = new Image();
-        const imageUrl = URL.createObjectURL(imageFile);
-        console.log('Created image URL:', imageUrl);
-        
-        img.onload = async () => {
-          try {
-            console.log('Image loaded, dimensions:', img.width, 'x', img.height);
-            // Load TensorFlow.js
-            console.log('Loading TensorFlow...');
-            const tf = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js');
-            await tf.ready();
-            console.log('TensorFlow loaded and ready');
-            
-            // Create canvas for image processing
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            console.log('Image drawn to canvas');
-            
-            // Convert image to tensor
-            console.log('Converting to tensor...');
-            const imageTensor = tf.browser.fromPixels(canvas)
-              .expandDims(0)
-              .toFloat()
-              .div(255.0);
-            console.log('Created image tensor:', imageTensor.shape);
-            
-            // Load COCO-SSD model
-            console.log('Loading COCO-SSD model...');
-            const model = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/ssd_mobilenet_v2/1/default/1/model.json');
-            console.log('Model loaded');
-            
-            // Get predictions
-            console.log('Getting predictions...');
-            const predictions = await model.predict(imageTensor);
-            const boxes = await predictions.array();
-            console.log('Predictions:', boxes);
-            
-            if (boxes && boxes[0] && boxes[0].length > 0) {
-              console.log('Object detected');
-              // Get the first detected object
-              const box = boxes[0][0];
-              const [y1, x1, y2, x2] = box.slice(0, 4);
-              
-              // Calculate pixel dimensions
-              const pixelWidth = Math.abs(x2 - x1) * img.width;
-              const pixelHeight = Math.abs(y2 - y1) * img.height;
-              console.log('Pixel dimensions:', pixelWidth, 'x', pixelHeight);
-              
-              // Convert to inches (assuming 96 DPI)
-              const PIXELS_PER_INCH = 96;
-              const width = Math.round((pixelWidth / PIXELS_PER_INCH) * 10) / 10;
-              const height = Math.round((pixelHeight / PIXELS_PER_INCH) * 10) / 10;
-              const depth = Math.round((Math.min(width, height) * 0.4) * 10) / 10; // Estimate depth
-              
-              console.log('Final dimensions (inches):', [width, height, depth]);
-              
-              // Cleanup
-              imageTensor.dispose();
-              predictions.dispose();
-              URL.revokeObjectURL(imageUrl);
-              
-              resolve([width, height, depth]);
-            } else {
-              console.log('No objects detected');
-              reject(new Error('No objects detected in image'));
-            }
-          } catch (error) {
-            console.error('Error in image processing:', error);
-            reject(error);
-          }
-        };
-        
-        img.onerror = (error) => {
-          console.error('Error loading image:', error);
-          URL.revokeObjectURL(imageUrl);
-          reject(new Error('Failed to load image'));
-        };
-        
-        img.src = imageUrl;
-      } catch (error) {
-        console.error('Error in dimension detection:', error);
-        reject(error);
-      }
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -227,34 +160,59 @@ const ProductForm = ({ onSubmit, initialData }) => {
           
           {/* Image Upload */}
           <Grid item xs={12}>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              style={{ display: 'none' }}
-              id="image-upload"
-              ref={imageRef}
-            />
-            <Button
-              variant="contained"
-              onClick={() => imageRef.current.click()}
-              disabled={processing}
-              startIcon={processing ? <CircularProgress size={20} /> : <AddIcon />}
-            >
-              {processing ? 'Processing Image...' : 'Upload Image'}
-            </Button>
-            {error && (
-              <Typography color="error" sx={{ mt: 1 }}>
-                {error}
-              </Typography>
+            <Box sx={{ mb: 2 }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                style={{ display: 'none' }}
+                id="image-upload"
+                ref={imageRef}
+              />
+              <Button
+                variant="contained"
+                onClick={() => imageRef.current.click()}
+                disabled={processing}
+                startIcon={processing ? <CircularProgress size={20} /> : <AddIcon />}
+              >
+                {processing ? 'Measuring Garment...' : 'Upload Image'}
+              </Button>
+              {error && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {error}
+                </Alert>
+              )}
+            </Box>
+            
+            {/* Debug View */}
+            {debugImage && (
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Detected Garment
+                </Typography>
+                <Box
+                  component="img"
+                  src={debugImage}
+                  sx={{
+                    maxWidth: '100%',
+                    height: 'auto',
+                    border: '1px solid #ccc',
+                  }}
+                />
+              </Box>
             )}
           </Grid>
 
           {/* Dimensions */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              Dimensions (inches)
+            </Typography>
+          </Grid>
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Width (inches)"
+              label="Width"
               type="number"
               inputProps={{ step: '0.1' }}
               value={formData.dimensions[0]}
@@ -268,7 +226,7 @@ const ProductForm = ({ onSubmit, initialData }) => {
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Height (inches)"
+              label="Height"
               type="number"
               inputProps={{ step: '0.1' }}
               value={formData.dimensions[1]}
@@ -282,7 +240,7 @@ const ProductForm = ({ onSubmit, initialData }) => {
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Depth (inches)"
+              label="Depth"
               type="number"
               inputProps={{ step: '0.1' }}
               value={formData.dimensions[2]}
