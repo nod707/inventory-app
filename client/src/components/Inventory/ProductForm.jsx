@@ -58,27 +58,18 @@ const ProductForm = ({ onSubmit, initialData }) => {
         console.log('Processing image:', file.name);
         
         // Measure garment
-        const dimensions = await measurementService.current.measureGarment(file);
-        console.log('Dimensions detected:', dimensions);
+        const result = await measurementService.current.measureGarment(file);
+        console.log('Measurement result:', result);
         
         setFormData({
           ...formData,
-          dimensions,
+          dimensions: result.dimensions,
         });
 
-        // Create debug view
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          setDebugImage(canvas.toDataURL());
-          URL.revokeObjectURL(url);
-        };
-        img.src = url;
+        // Set debug image if available
+        if (result.debugImage) {
+          setDebugImage(result.debugImage);
+        }
 
       } catch (error) {
         console.error('Error detecting dimensions:', error);
