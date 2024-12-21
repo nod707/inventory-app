@@ -1,0 +1,16 @@
+# DNS Records:
+Type: A
+Name: @ (or leave empty for root domain)
+Content: 76.76.21.21
+Proxy status: Proxied ✓
+
+Type: CNAME
+Name: www
+Content: posherdashboard.com
+Proxy status: Proxied ✓
+
+# Page Rule for WWW to non-WWW redirect:
+URL pattern: www.posherdashboard.com/*
+Settings:
+- Forwarding URL (301 - Permanent Redirect)
+- Destination URL: https://posherdashboard.com/$1
