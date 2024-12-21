@@ -40,7 +40,7 @@
       "src": "/(.*)",
       "dest": "/client/dist/index.html",
       "headers": {
-        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.vercel.app https://*.posherdashboard.com",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net https://tfhub.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://*.vercel.app https://*.posherdashboard.com https://cdn.jsdelivr.net https://tfhub.dev https://storage.googleapis.com; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self' https://tfhub.dev",
         "X-Frame-Options": "DENY",
         "X-Content-Type-Options": "nosniff",
         "Referrer-Policy": "strict-origin-when-cross-origin",
