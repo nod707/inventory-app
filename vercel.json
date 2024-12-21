@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "server/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/app.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "client/dist/$1"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "mongodb+srv://nextlevelnod:YIB48DAv0Kc2932p@inventory-app-cluster.oac5d.mongodb.net/inventory-app?retryWrites=true&w=majority&appName=inventory-app-cluster",
+    "JWT_SECRET": "inventory_app_jwt_secret_2024_secure_key_123",
+    "NODE_ENV": "production",
+    "CORS_ORIGIN": "https://posherdashboard.com"
+  }
+}

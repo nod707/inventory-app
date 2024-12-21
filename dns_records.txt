@@ -1,0 +1,27 @@
+{
+  "posherdashboard.com": {
+    "records": [
+      {
+        "type": "A",
+        "name": "@",
+        "content": "76.76.21.21",
+        "ttl": 1,
+        "proxied": true
+      },
+      {
+        "type": "A",
+        "name": "api",
+        "content": "76.76.21.21",
+        "ttl": 1,
+        "proxied": true
+      },
+      {
+        "type": "CNAME",
+        "name": "www",
+        "content": "posherdashboard.com",
+        "ttl": 1,
+        "proxied": true
+      }
+    ]
+  }
+}
