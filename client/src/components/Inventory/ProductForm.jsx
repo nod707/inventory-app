@@ -143,12 +143,140 @@ const ProductForm = ({ onSubmit, initialData }) => {
               fullWidth
               label="Product Name"
               name="name"
+              id="product-name"
+              autoComplete="off"
               value={formData.name}
               onChange={handleChange}
               required
             />
           </Grid>
-          
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Purchase Location"
+              name="purchaseLocation"
+              id="purchase-location"
+              autoComplete="off"
+              value={formData.purchaseLocation}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Purchase Price"
+              name="purchasePrice"
+              id="purchase-price"
+              type="number"
+              autoComplete="off"
+              value={formData.purchasePrice}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Selling Location"
+              name="sellingLocation"
+              id="selling-location"
+              autoComplete="off"
+              value={formData.sellingLocation}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Selling Price"
+              name="sellingPrice"
+              id="selling-price"
+              type="number"
+              autoComplete="off"
+              value={formData.sellingPrice}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Purchase Date"
+              name="purchaseDate"
+              id="purchase-date"
+              type="date"
+              autoComplete="off"
+              value={formData.purchaseDate}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+          </Grid>
+
+          {/* Dimensions */}
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              Dimensions (inches)
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Width"
+              name="width"
+              id="dimension-width"
+              type="number"
+              autoComplete="off"
+              inputProps={{ step: '0.1' }}
+              value={formData.dimensions[0]}
+              onChange={(e) => {
+                const newDimensions = [...formData.dimensions];
+                newDimensions[0] = parseFloat(e.target.value) || 0;
+                setFormData({ ...formData, dimensions: newDimensions });
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Height"
+              name="height"
+              id="dimension-height"
+              type="number"
+              autoComplete="off"
+              inputProps={{ step: '0.1' }}
+              value={formData.dimensions[1]}
+              onChange={(e) => {
+                const newDimensions = [...formData.dimensions];
+                newDimensions[1] = parseFloat(e.target.value) || 0;
+                setFormData({ ...formData, dimensions: newDimensions });
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              fullWidth
+              label="Depth"
+              name="depth"
+              id="dimension-depth"
+              type="number"
+              autoComplete="off"
+              inputProps={{ step: '0.1' }}
+              value={formData.dimensions[2]}
+              onChange={(e) => {
+                const newDimensions = [...formData.dimensions];
+                newDimensions[2] = parseFloat(e.target.value) || 0;
+                setFormData({ ...formData, dimensions: newDimensions });
+              }}
+            />
+          </Grid>
+
           {/* Image Upload */}
           <Grid item xs={12}>
             <Box sx={{ mb: 2 }}>
@@ -192,55 +320,6 @@ const ProductForm = ({ onSubmit, initialData }) => {
                 />
               </Box>
             )}
-          </Grid>
-
-          {/* Dimensions */}
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Dimensions (inches)
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Width"
-              type="number"
-              inputProps={{ step: '0.1' }}
-              value={formData.dimensions[0]}
-              onChange={(e) => {
-                const newDimensions = [...formData.dimensions];
-                newDimensions[0] = parseFloat(e.target.value) || 0;
-                setFormData({ ...formData, dimensions: newDimensions });
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Height"
-              type="number"
-              inputProps={{ step: '0.1' }}
-              value={formData.dimensions[1]}
-              onChange={(e) => {
-                const newDimensions = [...formData.dimensions];
-                newDimensions[1] = parseFloat(e.target.value) || 0;
-                setFormData({ ...formData, dimensions: newDimensions });
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Depth"
-              type="number"
-              inputProps={{ step: '0.1' }}
-              value={formData.dimensions[2]}
-              onChange={(e) => {
-                const newDimensions = [...formData.dimensions];
-                newDimensions[2] = parseFloat(e.target.value) || 0;
-                setFormData({ ...formData, dimensions: newDimensions });
-              }}
-            />
           </Grid>
 
           {/* Submit Button */}
