@@ -11,8 +11,6 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { products } from '../../services/api';
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-backend-webgl';
 
 const ProductForm = ({ onSubmit, initialData }) => {
   const [formData, setFormData] = useState(initialData || {
@@ -65,6 +63,7 @@ const ProductForm = ({ onSubmit, initialData }) => {
     return new Promise((resolve) => {
       img.onload = async () => {
         // Load COCO-SSD model
+        const tf = await import('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js');
         const model = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/coco-ssd/1/default/1');
         
         // Convert image to tensor
