@@ -10,6 +10,25 @@ const marketplaceRoutes = require('./routes/marketplaceRoutes');
 
 const app = express();
 
+// Security headers middleware
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://tfhub.dev",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https://*.vercel.app https://*.posherdashboard.com https://cdn.jsdelivr.net https://tfhub.dev https://storage.googleapis.com",
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:",
+    "frame-src 'self' https://tfhub.dev",
+    "wasm-src 'self' https://cdn.jsdelivr.net",
+    "wasm-unsafe-eval 'self'"
+  ].join('; '));
+  next();
+});
+
 // Basic middleware
 app.use(express.json());
 app.use(cors({

@@ -16,22 +16,6 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
-    },
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Content-Security-Policy': `
-        default-src 'self';
-        script-src 'self' 'unsafe-eval' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://tfhub.dev;
-        style-src 'self' 'unsafe-inline';
-        img-src 'self' data: https: blob:;
-        connect-src 'self' https://*.vercel.app https://*.posherdashboard.com https://cdn.jsdelivr.net https://tfhub.dev https://storage.googleapis.com;
-        worker-src 'self' blob:;
-        child-src 'self' blob:;
-        frame-src 'self' https://tfhub.dev;
-        wasm-src 'self' https://cdn.jsdelivr.net;
-        wasm-unsafe-eval 'self'
-      `.replace(/\s+/g, ' ').trim()
     }
   },
   build: {
