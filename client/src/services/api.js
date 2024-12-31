@@ -4,13 +4,11 @@ const isDevelopment = import.meta.env.MODE === 'development';
 
 // Create axios instance with default config
 export const api = axios.create({
-  // In development, use relative URL for proxy
-  // In production, use the full API URL
   baseURL: isDevelopment ? '/api' : import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true // Required for CORS with credentials
+  withCredentials: true
 });
 
 // Add token to requests if it exists
@@ -23,8 +21,8 @@ api.interceptors.request.use(
     console.log('API Request:', {
       url: config.url,
       method: config.method,
-      headers: config.headers,
-      data: config.data,
+      baseURL: config.baseURL,
+      headers: config.headers
     });
     return config;
   },
@@ -45,44 +43,131 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Log the full error for debugging
     console.error('API Error:', {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
-      stack: error.stack
+      baseURL: error.config?.baseURL
     });
-    
-    // Handle CORS errors
-    if (error.message.includes('Network Error') || error.message.includes('CORS')) {
-      console.error('CORS or Network Error:', {
-        message: error.message,
-        config: error.config
-      });
+
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
-    
+
     return Promise.reject(error);
   }
 );
 
 // Auth endpoints
 export const auth = {
-  login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData),
-  getProfile: () => api.get('/auth/profile'),
+  async login(credentials) {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async register(userData) {
+    try {
+      const response = await api.post('/auth/register', userData);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async getProfile() {
+    try {
+      const response = await api.get('/auth/profile');
+      return response.data;
+    } catch (error) {
+      console.error('Get profile error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  logout() {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+  }
 };
 
 // Product endpoints
 export const products = {
-  create: (formData) => api.post('/products', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  getAll: () => api.get('/products'),
-  getOne: (id) => api.get(`/products/${id}`),
-  update: (id, formData) => api.put(`/products/${id}`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  delete: (id) => api.delete(`/products/${id}`),
-  markAsSold: (id, sellingPrice) => api.patch(`/products/${id}/sold`, { sellingPrice }),
+  async create(formData) {
+    try {
+      const response = await api.post('/products', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Create product error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async getAll() {
+    try {
+      const response = await api.get('/products');
+      return response.data;
+    } catch (error) {
+      console.error('Get products error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async getOne(id) {
+    try {
+      const response = await api.get(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Get product error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async update(id, formData) {
+    try {
+      const response = await api.put(`/products/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Update product error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async delete(id) {
+    try {
+      const response = await api.delete(`/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Delete product error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  async markAsSold(id, sellingPrice) {
+    try {
+      const response = await api.post(`/products/${id}/sold`, { sellingPrice });
+      return response.data;
+    } catch (error) {
+      console.error('Mark as sold error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
 };
