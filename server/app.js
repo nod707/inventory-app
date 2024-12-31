@@ -14,9 +14,11 @@ const app = express();
 app.use(express.json());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
-    : ['http://localhost:5176', 'http://localhost:5173'],
-  credentials: true
+    ? [process.env.FRONTEND_URL, 'https://posherdashboard.com'] 
+    : ['http://localhost:5176', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5000', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Serve static files from the uploads directory
