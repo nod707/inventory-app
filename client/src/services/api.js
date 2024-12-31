@@ -1,13 +1,16 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const isDevelopment = import.meta.env.MODE === 'development';
 
 // Create axios instance with default config
 export const api = axios.create({
-  baseURL: API_URL,
+  // In development, use relative URL for proxy
+  // In production, use the full API URL
+  baseURL: isDevelopment ? '/api' : import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true // Required for CORS with credentials
 });
 
 // Add token to requests if it exists
@@ -42,12 +45,23 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Log the full error for debugging
     console.error('API Error:', {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
       message: error.message,
+      stack: error.stack
     });
+    
+    // Handle CORS errors
+    if (error.message.includes('Network Error') || error.message.includes('CORS')) {
+      console.error('CORS or Network Error:', {
+        message: error.message,
+        config: error.config
+      });
+    }
+    
     return Promise.reject(error);
   }
 );

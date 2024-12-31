@@ -123,6 +123,55 @@ router.post('/', auth, upload.array('images', 5), async (req, res) => {
   }
 });
 
+// Import product from marketplace
+router.post('/import', async (req, res) => {
+  try {
+    const {
+      title,
+      price,
+      description,
+      images,
+      condition,
+      seller,
+      source
+    } = req.body;
+
+    // Clean up price string and convert to number
+    const cleanPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
+
+    // Create new product
+    const product = new Product({
+      name: title,
+      price: cleanPrice,
+      description,
+      images,
+      condition,
+      originalListing: {
+        seller,
+        url: source.url,
+        marketplace: source.marketplace,
+        importedAt: new Date()
+      },
+      status: 'imported'
+    });
+
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Product imported successfully',
+      product
+    });
+  } catch (error) {
+    console.error('Error importing product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to import product',
+      error: error.message
+    });
+  }
+});
+
 // Get all products
 router.get('/', async (req, res) => {
   try {

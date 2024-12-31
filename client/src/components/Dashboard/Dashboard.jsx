@@ -20,7 +20,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { products } from '../../services/api';
 import ProductCard from '../Inventory/ProductCard';
-import ProductForm from '../Inventory/ProductForm';
+import ProductForm from '../ProductForm';
 
 const Dashboard = () => {
   const [productList, setProductList] = useState([]);
@@ -72,8 +72,8 @@ const Dashboard = () => {
   };
 
   const filteredProducts = productList.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.hashtags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.hashtags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const calculateTotalProfit = () => {
@@ -163,6 +163,10 @@ const Dashboard = () => {
           <ProductForm
             onSubmit={handleSubmit}
             initialData={editProduct}
+            onCancel={() => {
+              setOpenForm(false);
+              setEditProduct(null);
+            }}
           />
         </Dialog>
       </Container>

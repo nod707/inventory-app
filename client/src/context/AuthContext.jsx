@@ -1,30 +1,39 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { auth as authApi } from '../services/api';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('AuthProvider mounted');
+    // Check if user is logged in on mount
     const token = localStorage.getItem('token');
     if (token) {
-      loadUser();
+      checkAuthStatus();
     } else {
       setLoading(false);
     }
   }, []);
 
-  const loadUser = async () => {
+  const checkAuthStatus = async () => {
     try {
-      console.log('Loading user profile...');
-      const response = await authApi.getProfile();
-      setUser(response.data);
-      console.log('User profile loaded:', response.data);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
+      }
     } catch (error) {
-      console.error('Error loading user:', error);
+      console.error('Auth status check failed:', error);
       localStorage.removeItem('token');
       setUser(null);
     } finally {
@@ -32,69 +41,64 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
-    console.log('Attempting login...', credentials);
-    try {
-      const response = await authApi.login(credentials);
-      console.log('Login response:', response.data);
-      
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
-        return response.data;
-      } else {
-        throw new Error('No token received from server');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+  const login = async (email, password) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
     }
+
+    localStorage.setItem('token', data.token);
+    setUser(data.user);
+    return data;
   };
 
-  const register = async (userData) => {
-    console.log('Attempting registration...', userData);
-    try {
-      const response = await authApi.register(userData);
-      console.log('Registration response:', response.data);
-      
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
-        return response.data;
-      } else {
-        throw new Error('No token received from server');
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
+  const register = async ({ username, email, password }) => {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, email, password }),
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
     }
+
+    // Login after successful registration
+    await login(email, password);
+    return data;
   };
 
   const logout = () => {
-    console.log('Logging out...');
     localStorage.removeItem('token');
     setUser(null);
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout
-  };
-
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+      {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

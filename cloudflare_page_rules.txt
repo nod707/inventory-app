@@ -4,13 +4,50 @@ Name: @ (or leave empty for root domain)
 Content: 76.76.21.21
 Proxy status: Proxied ✓
 
+Type: A
+Name: api
+Content: 76.76.21.21
+Proxy status: Proxied ✓
+
 Type: CNAME
 Name: www
 Content: posherdashboard.com
 Proxy status: Proxied ✓
 
-# Page Rule for WWW to non-WWW redirect:
+# Page Rules:
+
+1. WWW to non-WWW redirect:
 URL pattern: www.posherdashboard.com/*
 Settings:
 - Forwarding URL (301 - Permanent Redirect)
 - Destination URL: https://posherdashboard.com/$1
+
+2. Force HTTPS:
+URL pattern: posherdashboard.com/*
+Settings:
+- Always Use HTTPS: On
+- Security Level: High
+- SSL: Full (strict)
+- Browser Cache TTL: 4 hours
+- Always Online: On
+- Email Obfuscation: On
+- Server-side Excludes: On
+- Automatic HTTPS Rewrites: On
+
+3. API Subdomain:
+URL pattern: api.posherdashboard.com/*
+Settings:
+- Cache Level: Bypass
+- Security Level: High
+- SSL: Full (strict)
+- Browser Cache TTL: 30 minutes
+- Always Online: Off
+- Email Obfuscation: Off
+- Server-side Excludes: Off
+- Automatic HTTPS Rewrites: On
+
+# Security Headers:
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval' https://docs.opencv.org https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.posherdashboard.com; worker-src 'self' blob:; frame-src 'self'; object-src 'none'

@@ -1,25 +1,25 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    exclude: ['@techstark/opencv-js']
+  },
   build: {
-    sourcemap: true,
-    outDir: 'dist',
-    rollupOptions: {
-      external: [],
-      output: {
-        manualChunks: {
-          tensorflow: ['@tensorflow/tfjs']
-        }
-      }
+    commonjsOptions: {
+      include: [/@techstark\/opencv-js/, /node_modules/]
     }
   },
-  optimizeDeps: {
-    include: ['@tensorflow/tfjs']
-  },
   server: {
-    port: 3000
+    port: 5173,
+    strictPort: true,
+    host: '0.0.0.0',
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; worker-src 'self' blob:; connect-src 'self' ws: wss:; frame-src 'self';"
+    }
   }
-})
+});

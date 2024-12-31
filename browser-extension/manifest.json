@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Inventory Helper",
+  "version": "1.0",
+  "description": "Save products from marketplaces to your inventory app",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.mercari.com/*",
+    "https://poshmark.com/*",
+    "https://www.ebay.com/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.mercari.com/*",
+        "https://poshmark.com/*",
+        "https://www.ebay.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}

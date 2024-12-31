@@ -73,6 +73,12 @@ const productSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
     index: true
+  },
+  originalListing: {
+    seller: String,
+    url: String,
+    marketplace: String,
+    importedAt: Date
   }
 });
 
