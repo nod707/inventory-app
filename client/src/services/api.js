@@ -1,10 +1,11 @@
 import axios from 'axios';
 
 const isDevelopment = import.meta.env.MODE === 'development';
+const baseURL = isDevelopment ? '/api' : `${window.location.origin}/api`;
 
 // Create axios instance with default config
 export const api = axios.create({
-  baseURL: isDevelopment ? '/api' : import.meta.env.VITE_API_URL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
